@@ -1,39 +1,52 @@
+
 pipeline {
-    tools {
+   tools {
         maven 'Maven3'
     }
     agent any
     environment {
         registry = "533267400284.dkr.ecr.ap-south-1.amazonaws.com/test-repo"
     }
+   
     stages {
-        stage('Checkout from GitHub') {
+        stage('Cloning Git') {
             steps {
-                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/cyril-doss14/EKS-CICD.git']])
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '', url: 'https://github.com/cyril-doss14/EKS-CICD.git']]])     
             }
         }
-        stage('Maven Build') {
-            steps {
-                sh 'mvn clean package'
+      stage ('Build') {
+          steps {
+            sh 'mvn clean install'           
             }
+      }
+    // Building Docker images
+    stage('Building image') {
+      steps{
+        script {
+          dockerImage = docker.build registry 
         }
-        stage('Docker Build') {
-            steps {
-                sh 'docker build registry'
+      }
+    }
+   
+    // Uploading Docker images into AWS ECR
+    stage('Pushing to ECR') {
+     steps{  
+         script {
+                sh 'aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 533267400284.dkr.ecr.ap-south-1.amazonaws.com'
+                sh 'docker push 533267400284.dkr.ecr.ap-south-1.amazonaws.com/test-repo:latest'
+         }
+        }
+      }
+
+       stage('K8S Deploy') {
+            steps{   
+            script {
+                sh ('kubectl apply -f  eks-deploy-k8s.yaml')
+                
             }
-        }
-        stage('Push Docker Image to ECR') {
-            steps {
-                script {
-                    sh 'aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 533267400284.dkr.ecr.ap-south-1.amazonaws.com'
-                    sh 'docker push 533267400284.dkr.ecr.ap-south-1.amazonaws.com/test-repo:latest'
-                }
-            }
-        }
-        stage('K8S Deploy') {
-            steps {
-                sh 'kubectl apply -f eks-deploy-k8s.yaml'
-            }
-        }
+
+       }
     }
 }
+}
+
