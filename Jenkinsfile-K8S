@@ -5,7 +5,6 @@ pipeline {
     agent any
     environment {
         registry = "533267400284.dkr.ecr.ap-south-1.amazonaws.com/test-repo"
-        imageTag = "latest"  // You might want to use a dynamic tag for versioning
     }
     stages {
         stage('Checkout from GitHub') {
@@ -16,11 +15,6 @@ pipeline {
         stage('Maven Build') {
             steps {
                 sh 'mvn clean package'
-            }
-        }
-        stage('Hello') {
-            steps {
-                echo 'Hello World'
             }
         }
         stage('Docker Build') {
