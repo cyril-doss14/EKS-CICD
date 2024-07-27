@@ -1,14 +1,14 @@
 pipeline {
     tools {
-        maven Maven3
+        maven 'Maven3'
     }
     agent any
-    environment{
+    environment {
         registry = "533267400284.dkr.ecr.ap-south-1.amazonaws.com/test-repo"
+        imageTag = "latest"  // You might want to use a dynamic tag for versioning
     }
-
     stages {
-        stage('Checkout from github') {
+        stage('Checkout from GitHub') {
             steps {
                 checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/cyril-doss14/EKS-CICD.git']])
             }
@@ -25,18 +25,20 @@ pipeline {
         }
         stage('Docker Build') {
             steps {
-                sh 'docker build -t registry'
+                sh 'docker build registry'
             }
         }
-        stage('Push Dcoker Image to ECR') {
+        stage('Push Docker Image to ECR') {
             steps {
-                sh 'aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 533267400284.dkr.ecr.ap-south-1.amazonaws.com'
-                sh 'docker push 533267400284.dkr.ecr.ap-south-1.amazonaws.com/test-repo:latest'
+                script {
+                    sh 'aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 533267400284.dkr.ecr.ap-south-1.amazonaws.com'
+                    sh 'docker push 533267400284.dkr.ecr.ap-south-1.amazonaws.com/test-repo:latest'
+                }
             }
         }
         stage('K8S Deploy') {
             steps {
-                sh ('kubectl create -f eks-deploy-k8s.yaml')
+                sh 'kubectl apply -f eks-deploy-k8s.yaml'
             }
         }
     }
