@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: my-springboot-app
-        image: 150878085644.dkr.ecr.ap-south-1.amazonaws.com/test
+        image: 533267400284.dkr.ecr.ap-south-1.amazonaws.com/test-repo
         imagePullPolicy: Always
         ports:
         - containerPort: 8085
@@ -36,7 +36,7 @@ spec:
   - name: http
     port: 80
     protocol: TCP
-    targetPort: 8085
+    targetPort: 8086
   type: LoadBalancer
   selector:
     app: springboot-app
