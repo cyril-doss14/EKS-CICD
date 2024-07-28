@@ -41,7 +41,7 @@ pipeline {
        stage('K8S Deploy') {
             steps{   
             script {
-                sh ('kubectl apply -f eks-deploy-k8s.yaml')
+                sh ('kubectl apply -f eks-deploy-from-ecr.yaml')
                 
             }
 
